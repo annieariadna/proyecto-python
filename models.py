@@ -18,4 +18,6 @@ class Report(db.Model):
     description = db.Column(db.Text, nullable=False)
     category = db.Column(db.Enum('lost','found', name='cat_enum'), nullable=False)
     date_posted = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    image_filename = db.Column(db.String(120), nullable=True)  # Nuevo campo para imagen
+    location = db.Column(db.String(100), nullable=True)  # Campo adicional para ubicación
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)

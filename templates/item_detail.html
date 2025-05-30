@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+        {% block title %}Detalle del reporte{% endblock %}
+        {% block content %}
+        <div class="card">
+            <div class="card-body">
+                <h3>{{ report.title }}</h3>
+                <p><strong>Categoría:</strong> {{ report.category }}</p>
+                <p>{{ report.description }}</p>
+                <p><small class="text-muted">Publicado el {{ report.date_posted.strftime('%d/%m/%Y') }}</small></p>
+                <p><strong>Por:</strong> {{ report.author.username }}</p>
+            </div>
+        </div>
+        <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Volver</a>
+        {% endblock %}

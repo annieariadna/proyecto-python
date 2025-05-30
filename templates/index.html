@@ -1,0 +1,18 @@
+
+{% extends "base.html" %}
+{% block title %}Inicio - Lost&Found{% endblock %}
+{% block content %}
+  <h1>Reportes recientes</h1>
+  {% for rpt in reports.items %}
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title">{{ rpt.title }} <small class="text-muted">({{ rpt.category }})</small></h5>
+        <p class="card-text">{{ rpt.description[:100] }}…</p>
+        <a href="{{ url_for('report_detail', report_id=rpt.id) }}" class="btn btn-primary btn-sm">Ver detalle</a>
+      </div>
+    </div>
+  {% endfor %}
+  <nav>
+    {{ reports.links }}
+  </nav>
+{% endblock %}

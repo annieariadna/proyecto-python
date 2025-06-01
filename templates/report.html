@@ -1,18 +1,220 @@
 {% extends "base.html" %}
-        {% block title %}Nuevo Reporte{% endblock %}
-        {% block content %}
-        <h2>Reportar objeto</h2>
-        <form method="POST">
+{% block title %}Reportar Objeto - UTP Objetos Perdidos{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <!-- Welcome Section -->
+    <section class="welcome-section">
+        <h1 class="welcome-title">
+            <i class="fas fa-plus-circle" style="color: var(--utp-orange); margin-right: 0.5rem;"></i>
+            Reportar Objeto
+        </h1>
+        <p class="welcome-subtitle">
+            Completa el formulario para reportar un objeto perdido o encontrado
+        </p>
+    </section>
+
+    <!-- Form Section -->
+    <section class="search-section">
+        <form method="POST" enctype="multipart/form-data">
             {{ form.hidden_tag() }}
-            <div class="mb-3">
-                {{ form.title.label }} {{ form.title(class="form-control") }}
+            
+            <div class="form-grid">
+                <!-- Título -->
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        <i class="fas fa-tag"></i>
+                        {{ form.title.label.text }}
+                    </label>
+                    {{ form.title(class="form-input", placeholder="Ej: iPhone 13 Pro, Llaves con llavero UTP, Laptop HP") }}
+                    {% if form.title.errors %}
+                        <div class="error-message">
+                            {% for error in form.title.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Categoría y Ubicación -->
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-list"></i>
+                        {{ form.category.label.text }}
+                    </label>
+                    {{ form.category(class="form-select") }}
+                    {% if form.category.errors %}
+                        <div class="error-message">
+                            {% for error in form.category.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-map-marker-alt"></i>
+                        {{ form.location.label.text }}
+                    </label>
+                    {{ form.location(class="form-input") }}
+                    {% if form.location.errors %}
+                        <div class="error-message">
+                            {% for error in form.location.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Descripción -->
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        <i class="fas fa-align-left"></i>
+                        {{ form.description.label.text }}
+                    </label>
+                    {{ form.description(class="form-textarea", rows="4", placeholder="Describe detalladamente el objeto, características distintivas, color, marca, etc.") }}
+                    {% if form.description.errors %}
+                        <div class="error-message">
+                            {% for error in form.description.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Imagen -->
+                <div class="form-group full-width">
+                    <label class="form-label">
+                        <i class="fas fa-camera"></i>
+                        {{ form.image.label.text }}
+                    </label>
+                    <div class="file-input-wrapper">
+                        {{ form.image(class="file-input", id="imageInput") }}
+                        <label for="imageInput" class="file-input-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            Seleccionar imagen
+                        </label>
+                        <span class="file-input-text">No se ha seleccionado ningún archivo</span>
+                    </div>
+                    {% if form.image.errors %}
+                        <div class="error-message">
+                            {% for error in form.image.errors %}
+                                <span>{{ error }}</span>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Botones -->
+                <div class="form-actions full-width">
+                    {{ form.submit(class="btn-primary") }}
+                    <a href="{{ url_for('index') }}" class="btn-outline">
+                        <i class="fas fa-arrow-left"></i>
+                        Cancelar
+                    </a>
+                </div>
             </div>
-            <div class="mb-3">
-                {{ form.description.label }} {{ form.description(class="form-control", rows=4) }}
-            </div>
-            <div class="mb-3">
-                {{ form.category.label }} {{ form.category(class="form-select") }}
-            </div>
-            {{ form.submit(class="btn btn-primary") }}
         </form>
-        {% endblock %}
+    </section>
+</div>
+
+<style>
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.full-width {
+    grid-column: 1 / -1;
+}
+
+.form-textarea {
+    padding: 0.75rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 100px;
+    transition: all 0.3s ease;
+}
+
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--utp-light-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.file-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.file-input {
+    display: none;
+}
+
+.file-input-label {
+    background: var(--utp-light-blue);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+}
+
+.file-input-label:hover {
+    background: var(--utp-blue);
+    transform: translateY(-1px);
+}
+
+.file-input-text {
+    color: var(--utp-dark-gray);
+    font-size: 0.875rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-start;
+    margin-top: 1rem;
+}
+
+.error-message {
+    color: #dc2626;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+}
+
+.error-message span {
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+// Actualizar texto del archivo seleccionado
+document.getElementById('imageInput').addEventListener('change', function(e) {
+    const fileName = e.target.files[0]?.name || 'No se ha seleccionado ningún archivo';
+    document.querySelector('.file-input-text').textContent = fileName;
+});
+</script>
+{% endblock %}

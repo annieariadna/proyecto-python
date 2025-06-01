@@ -1,18 +1,223 @@
-
 {% extends "base.html" %}
-{% block title %}Inicio - Lost&Found{% endblock %}
+{% block title %}Inicio - UTP Objetos Perdidos{% endblock %}
+
 {% block content %}
-  <h1>Reportes recientes</h1>
-  {% for rpt in reports.items %}
-    <div class="card mb-3">
-      <div class="card-body">
-        <h5 class="card-title">{{ rpt.title }} <small class="text-muted">({{ rpt.category }})</small></h5>
-        <p class="card-text">{{ rpt.description[:100] }}…</p>
-        <a href="{{ url_for('report_detail', report_id=rpt.id) }}" class="btn btn-primary btn-sm">Ver detalle</a>
-      </div>
+<!-- Welcome Section -->
+<section style="text-align: center; margin-bottom: 3rem; background: white; padding: 3rem 2rem; border-radius: 16px; box-shadow: var(--shadow);">
+    <h1 style="font-size: 2.5rem; color: var(--utp-blue); margin-bottom: 1rem; font-weight: 700;">
+        Sistema de Objetos Perdidos
+    </h1>
+    <p style="font-size: 1.2rem; color: var(--utp-dark-gray); margin-bottom: 2rem;">
+        Encuentra y reporta objetos perdidos en el campus de la Universidad Tecnológica del Perú
+    </p>
+    {% if not current_user.is_authenticated %}
+        <a href="{{ url_for('register') }}" class="btn btn-primary" style="margin-right: 1rem;">
+            <i class="fas fa-user-plus"></i>
+            Únete Ahora
+        </a>
+        <a href="{{ url_for('new_report') }}" class="btn btn-outline">
+            <i class="fas fa-plus"></i>
+            Reportar Objeto
+        </a>
+    {% endif %}
+</section>
+
+<!-- Search Section -->
+<section style="background: white; padding: 2rem; border-radius: 16px; box-shadow: var(--shadow); margin-bottom: 2rem;">
+    <h2 style="color: var(--utp-blue); margin-bottom: 1.5rem;">
+        <i class="fas fa-search"></i>
+        Buscar Objetos
+    </h2>
+    <form action="{{ url_for('search') }}" method="GET" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 1rem; align-items: end;">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Buscar objeto</label>
+            <input type="text" name="query" class="form-control" placeholder="Describe el objeto que buscas..." value="{{ request.args.get('query', '') }}">
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Categoría</label>
+            <select name="category" class="form-select">
+                <option value="">Todas</option>
+                <option value="lost" {{ 'selected' if request.args.get('category') == 'lost' }}>Perdidos</option>
+                <option value="found" {{ 'selected' if request.args.get('category') == 'found' }}>Encontrados</option>
+            </select>
+        </div>
+        <div class="form-group" style="margin-bottom: 0;">
+            <label class="form-label">Ubicación</label>
+            <input type="text" name="location" class="form-control" placeholder="Ej: Biblioteca..." value="{{ request.args.get('location', '') }}">
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-search"></i>
+            Buscar
+        </button>
+    </form>
+</section>
+
+<!-- Filter Tabs -->
+<div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
+    <a href="{{ url_for('index') }}" class="filter-tab {{ 'active' if not request.args.get('category') }}">
+        <i class="fas fa-list"></i>
+        Todos
+    </a>
+    <a href="{{ url_for('index', category='lost') }}" class="filter-tab {{ 'active' if request.args.get('category') == 'lost' }}">
+        <i class="fas fa-exclamation-circle"></i>
+        Perdidos
+    </a>
+    <a href="{{ url_for('index', category='found') }}" class="filter-tab {{ 'active' if request.args.get('category') == 'found' }}">
+        <i class="fas fa-check-circle"></i>
+        Encontrados
+    </a>
+</div>
+
+<style>
+.filter-tab {
+    background: white;
+    border: 2px solid #e2e8f0;
+    padding: 0.75rem 1.5rem;
+    border-radius: 25px;
+    text-decoration: none;
+    color: var(--utp-dark-gray);
+    transition: all 0.3s ease;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-tab.active {
+    background: var(--utp-blue);
+    color: white;
+    border-color: var(--utp-blue);
+}
+
+.filter-tab:hover:not(.active) {
+    border-color: var(--utp-light-blue);
+    transform: translateY(-1px);
+    color: var(--utp-light-blue);
+}
+</style>
+
+<!-- Objects Grid -->
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem;">
+    {% for report in reports.items %}
+    <div class="card" style="transition: all 0.3s ease;">
+        <div style="height: 200px; background: linear-gradient(45deg, #f1f5f9, #e2e8f0); display: flex; align-items: center; justify-content: center; color: var(--utp-dark-gray); font-size: 3rem;">
+            {% if report.image_filename %}
+                <img src="{{ url_for('uploaded_file', filename=report.image_filename) }}" 
+                     alt="{{ report.title }}" 
+                     style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+                {% if 'iphone' in report.title.lower() or 'celular' in report.title.lower() or 'móvil' in report.title.lower() %}
+                    <i class="fas fa-mobile-alt"></i>
+                {% elif 'laptop' in report.title.lower() or 'computadora' in report.title.lower() %}
+                    <i class="fas fa-laptop"></i>
+                {% elif 'libro' in report.title.lower() %}
+                    <i class="fas fa-book"></i>
+                {% elif 'llave' in report.title.lower() %}
+                    <i class="fas fa-key"></i>
+                {% elif 'cartera' in report.title.lower() or 'billetera' in report.title.lower() %}
+                    <i class="fas fa-wallet"></i>
+                {% else %}
+                    <i class="fas fa-box"></i>
+                {% endif %}
+            {% endif %}
+        </div>
+        <div class="card-body">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                <h3 class="card-title">{{ report.title }}</h3>
+                <span class="status-badge status-{{ report.category }}">
+                    {{ 'Perdido' if report.category == 'lost' else 'Encontrado' }}
+                </span>
+            </div>
+            <p class="card-text">{{ report.description[:100] }}{% if report.description|length > 100 %}...{% endif %}</p>
+            <div style="display: flex; gap: 1rem; font-size: 0.875rem; color: var(--utp-dark-gray); margin-bottom: 1rem;">
+                {% if report.location %}
+                    <div><i class="fas fa-map-marker-alt" style="width: 16px;"></i> {{ report.location }}</div>
+                {% endif %}
+                <div><i class="fas fa-calendar" style="width: 16px;"></i> {{ report.date_posted.strftime('%d/%m/%Y') }}</div>
+                <div><i class="fas fa-user" style="width: 16px;"></i> {{ report.author.username }}</div>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="{{ url_for('report_detail', report_id=report.id) }}" class="btn btn-outline btn-sm">
+                    Ver detalles
+                </a>
+                {% if current_user.is_authenticated and current_user != report.author %}
+                <button class="btn btn-primary btn-sm" onclick="alert('Función de contacto en desarrollo')">
+                    <i class="fas fa-envelope"></i>
+                    Contactar
+                </button>
+                {% endif %}
+            </div>
+        </div>
     </div>
-  {% endfor %}
-  <nav>
-    {{ reports.links }}
-  </nav>
+    {% else %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem; color: var(--utp-dark-gray);">
+        <i class="fas fa-search" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+        <h3>No se encontraron objetos</h3>
+        <p>¿Perdiste algo? <a href="{{ url_for('new_report') }}" style="color: var(--utp-light-blue);">Repórtalo aquí</a></p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if reports.pages > 1 %}
+<nav style="margin-top: 2rem; display: flex; justify-content: center;">
+    <div style="display: flex; gap: 0.5rem;">
+        {% if reports.has_prev %}
+            <a href="{{ url_for('index', page=reports.prev_num) }}" class="btn btn-outline btn-sm">
+                <i class="fas fa-chevron-left"></i>
+                Anterior
+            </a>
+        {% endif %}
+        
+        {% for page_num in reports.iter_pages() %}
+            {% if page_num %}
+                {% if page_num != reports.page %}
+                    <a href="{{ url_for('index', page=page_num) }}" class="btn btn-outline btn-sm">{{ page_num }}</a>
+                {% else %}
+                    <span class="btn btn-primary btn-sm">{{ page_num }}</span>
+                {% endif %}
+            {% else %}
+                <span class="btn btn-outline btn-sm disabled">...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if reports.has_next %}
+            <a href="{{ url_for('index', page=reports.next_num) }}" class="btn btn-outline btn-sm">
+                Siguiente
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}
+
+<script>
+// Hover effects for cards
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+            this.style.boxShadow = 'var(--shadow-lg)';
+        });
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+            this.style.boxShadow = 'var(--shadow)';
+        });
+    });
+});
+
+// Responsive search form
+function updateSearchForm() {
+    const form = document.querySelector('form');
+    if (window.innerWidth <= 768) {
+        form.style.gridTemplateColumns = '1fr';
+    } else {
+        form.style.gridTemplateColumns = '2fr 1fr 1fr auto';
+    }
+}
+
+window.addEventListener('resize', updateSearchForm);
+updateSearchForm();
+</script>
 {% endblock %}

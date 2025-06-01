@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Búsqueda - UTP Objetos Perdidos{% endblock %}
+
+{% block content %}
+<div class="main-container">
+    <!-- Search Section -->
+    <section class="search-section">
+        <h2 style="color: var(--utp-blue); margin-bottom: 1.5rem; font-weight: 700;">
+            <i class="fas fa-search"></i>
+            Buscar Objetos
+        </h2>
+        
+        <form method="GET" action="{{ url_for('search') }}" class="search-form">
+            <div class="form-group">
+                <label class="form-label">Buscar objeto</label>
+                <input type="text" name="query" class="form-input" 
+                       value="{{ query }}" 
+                       placeholder="Describe el objeto que buscas...">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Categoría</label>
+                <select name="category" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    <option value="lost" {% if category == 'lost' %}selected{% endif %}>Perdidos</option>
+                    <option value="found" {% if category == 'found' %}selected{% endif %}>Encontrados</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Ubicación</label>
+                <input type="text" name="location" class="form-input" 
+                       value="{{ location }}" 
+                       placeholder="Biblioteca, Cafetería, etc.">
+            </div>
+            <button type="submit" class="btn-primary">
+                <i class="fas fa-search"></i>
+                Buscar
+            </button>
+        </form>
+    </section>
+
+    <!-- Results Section -->
+    <section style="margin-top: 2rem;">
+        {% if reports.items %}
+            <div style="margin-bottom: 1.5rem;">
+                <h3 style="color: var(--utp-blue);">
+                    Resultados de búsqueda ({{ reports.total }} encontrados)
+                </h3>
+            </div>
+
+            <!-- Objects Grid -->
+            <div class="cards-grid">
+                {% for report in reports.items %}
+                <div class="object-card" data-category="{{ report.category }}">
+                    <div class="card-image">
+                        {% if report.image_filename %}
+                            <img src="{{ url_for('uploaded_file', filename=report.image_filename) }}" 
+                                 alt="{{ report.title }}" 
+                                 style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            {% if 'phone' in report.title.lower() or 'iphone' in report.title.lower() or 'celular' in report.title.lower() %}
+                                <i class="fas fa-mobile-alt"></i>
+                            {% elif 'laptop' in report.title.lower() or 'computadora' in report.title.lower() %}
+                                <i class="fas fa-laptop"></i>
+                            {% elif 'llave' in report.title.lower() or 'key' in report.title.lower() %}
+                                <i class="fas fa-key"></i>
+                            {% elif 'libro' in report.title.lower() or 'book' in report.title.lower() %}
+                                <i class="fas fa-book"></i>
+                            {% elif 'bolso' in report.title.lower() or 'mochila' in report.title.lower() %}
+                                <i class="fas fa-backpack"></i>
+                            {% else %}
+                                <i class="fas fa-question"></i>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    <div class="card-content">
+                        <div class="card-header">
+                            <div>
+                                <h3 class="card-title">{{ report.title }}</h3>
+                                <span class="status-badge {% if report.category == 'lost' %}status-lost{% else %}status-found{% endif %}">
+                                    {% if report.category == 'lost' %}Perdido{% else %}Encontrado{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <p class="card-description">
+                            {{ report.description[:150] }}{% if report.description|length > 150 %}...{% endif %}
+                        </p>
+                        <div class="card-meta">
+                            {% if report.location %}
+                                <div><i class="fas fa-map-marker-alt"></i> {{ report.location }}</div>
+                            {% endif %}
+                            <div><i class="fas fa-calendar"></i> {{ report.date_posted.strftime('%d/%m/%Y') }}</div>
+                            <div><i class="fas fa-user"></i> {{ report.author.username }}</div>
+                        </div>
+                        <div class="card-actions">
+                            <a href="{{ url_for('report_detail', report_id=report.id) }}" class="btn-outline">Ver detalles</a>
+                            {% if current_user.is_authenticated and current_user != report.author %}
+                                <button class="btn-outline btn-contact" onclick="showContactModal('{{ report.author.username }}', '{{ report.title }}')">
+                                    <i class="fas fa-envelope"></i>
+                                    Contactar
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Pagination -->
+            {% if reports.pages > 1 %}
+            <nav style="margin-top: 2rem;">
+                <div class="pagination-wrapper">
+                    {% if reports.has_prev %}
+                        <a href="{{ url_for('search', page=reports.prev_num, query=query, category=category, location=location) }}" 
+                           class="btn-outline">
+                            <i class="fas fa-chevron-left"></i>
+                            Anterior
+                        </a>
+                    {% endif %}
+                    
+                    <span class="pagination-info">
+                        Página {{ reports.page }} de {{ reports.pages }}
+                    </span>
+                    
+                    {% if reports.has_next %}
+                        <a href="{{ url_for('search', page=reports.next_num, query=query, category=category, location=location) }}" 
+                           class="btn-outline">
+                            Siguiente
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+            {% endif %}
+
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <i class="fas fa-search"></i>
+                <h3>No se encontraron resultados</h3>
+                <p>Intenta con diferentes términos de búsqueda o revisa la ortografía.</p>
+                <a href="{{ url_for('index') }}" class="btn-primary" style="margin-top: 1rem;">
+                    <i class="fas fa-home"></i>
+                    Volver al inicio
+                </a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+
+<style>
+.pagination-wrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+}
+
+.pagination-info {
+    color: var(--utp-dark-gray);
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .pagination-wrapper {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+</style>
+{% endblock %}
